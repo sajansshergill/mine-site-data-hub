@@ -1,0 +1,38 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -e ".[dev]" -e libs/minehub_common
+      - run: ruff check .
+      - run: pytest -m "not integration" -q
+  lua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: leafo/gh-actions-lua@v10
+        with: { luaVersion: "5.4" }
+      - uses: leafo/gh-actions-luarocks@v4
+      - run: luarocks install busted
+      - run: busted fluent-bit/tests
+  dbt-compile:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg16
+        env: { POSTGRES_USER: minehub, POSTGRES_PASSWORD: minehub, POSTGRES_DB: minehub }
+        ports: ["5432:5432"]
+    env:
+      DBT_HOST: localhost
+      POSTGRES_PASSWORD: minehub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install dbt-postgres
+      - run: dbt deps --project-dir warehouse/dbt --profiles-dir warehouse/dbt
+      - run: dbt compile --project-dir warehouse/dbt --profiles-dir warehouse/dbt

@@ -1,0 +1,12 @@
+name: fuel_burn_per_tonne
+version: 1
+owner: maintenance-planning
+unit: L/t
+description: Estimated haul fleet fuel litres per tonne moved (operating hours x burn rate / tonnes)
+inputs: [truck_operating_hours, total_tonnes]
+params: { burn_rate_lph: 190 }
+lua: |
+  local hours = 0
+  for _, h in pairs(inputs.truck_operating_hours) do hours = hours + h end
+  if inputs.total_tonnes == 0 then return nil end
+  return (hours * params.burn_rate_lph) / inputs.total_tonnes

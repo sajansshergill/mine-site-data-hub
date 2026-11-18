@@ -1,0 +1,18 @@
+# Coordinates are local mine grid metres. Grade is percent (positive = uphill when travelling from->to).
+nodes:
+  PIT1_B1:      { x: 0,    y: 0,    geofence_radius_m: 60 }
+  PIT1_B2:      { x: 400,  y: -150, geofence_radius_m: 60 }
+  PIT2_B1:      { x: 1800, y: -300, geofence_radius_m: 60 }
+  RAMP1_TOP:    { x: 600,  y: 900 }
+  RAMP2_TOP:    { x: 2000, y: 800 }
+  JUNCTION:     { x: 1200, y: 1500 }
+  CRUSHER:      { x: 1500, y: 2600, geofence_radius_m: 80 }
+  WASTE_DUMP_N: { x: 300,  y: 2900, geofence_radius_m: 120 }
+segments:
+  - { from: PIT1_B1,   to: RAMP1_TOP,    grade_pct: 9,  speed_limit_kmh: 25 }
+  - { from: PIT1_B2,   to: RAMP1_TOP,    grade_pct: 8,  speed_limit_kmh: 25 }
+  - { from: PIT2_B1,   to: RAMP2_TOP,    grade_pct: 10, speed_limit_kmh: 22 }
+  - { from: RAMP1_TOP, to: JUNCTION,     grade_pct: 1,  speed_limit_kmh: 50 }
+  - { from: RAMP2_TOP, to: JUNCTION,     grade_pct: 1,  speed_limit_kmh: 50 }
+  - { from: JUNCTION,  to: CRUSHER,      grade_pct: 2,  speed_limit_kmh: 50 }
+  - { from: JUNCTION,  to: WASTE_DUMP_N, grade_pct: 3,  speed_limit_kmh: 45 }

@@ -1,0 +1,14 @@
+name: shovel_hang_time
+version: 1
+owner: mine-engineering
+unit: minutes
+description: Average minutes per shovel spent waiting with no truck to load
+inputs: [shovel_idle_minutes]
+lua: |
+  local total, n = 0, 0
+  for _, mins in pairs(inputs.shovel_idle_minutes) do
+    total = total + mins
+    n = n + 1
+  end
+  if n == 0 then return nil end
+  return total / n

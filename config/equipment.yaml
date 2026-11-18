@@ -1,0 +1,18 @@
+trucks:
+  model: CAT 793F
+  nominal_payload_t: 227
+  count: 12
+  id_prefix: HT
+  empty_speed_kmh: 45
+  loaded_speed_kmh: 30
+shovels:
+  - { id: SH01, model: Hitachi EX5600, location: PIT1_B1, load_time_s: [150, 210], material: ORE }
+  - { id: SH02, model: Hitachi EX5600, location: PIT1_B2, load_time_s: [140, 200], material: WASTE }
+  - { id: SH03, model: CAT 6060, location: PIT2_B1, load_time_s: [160, 230], material: ORE }
+dumps:
+  - { id: CR01, type: crusher, location: CRUSHER, dump_time_s: [50, 80], accepts: [ORE] }
+  - { id: WD01, type: waste_dump, location: WASTE_DUMP_N, dump_time_s: [40, 60], accepts: [WASTE] }
+plant:
+  - { id: CR01, class: crusher }
+  - { id: ML01, class: mill }
+  - { id: CV01, class: conveyor }

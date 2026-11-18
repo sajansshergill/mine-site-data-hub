@@ -1,0 +1,20 @@
+# vendor -> raw code -> canonical status + optional delay reason
+VENDOR_A:
+  "0": { status: RUNNING }
+  "1": { status: STANDBY, reason: NO_OPERATOR }
+  "2": { status: DELAY, reason: QUEUE }
+  "3": { status: DOWN, reason: UNPLANNED_BREAKDOWN }
+  "4": { status: DOWN, reason: PLANNED_MAINTENANCE }
+VENDOR_B:
+  RUN: { status: RUNNING }
+  IDLE: { status: STANDBY, reason: NO_OPERATOR }
+  WAIT: { status: DELAY, reason: QUEUE }
+  FAULT: { status: DOWN, reason: UNPLANNED_BREAKDOWN }
+  PM: { status: DOWN, reason: PLANNED_MAINTENANCE }
+  REFUEL: { status: DELAY, reason: REFUEL }
+VENDOR_C:
+  OK: { status: RUNNING }
+  STBY: { status: STANDBY, reason: SHIFT_CHANGE }
+  DLY: { status: DELAY, reason: OPERATIONAL }
+  BRKDN: { status: DOWN, reason: UNPLANNED_BREAKDOWN }
+  SVC: { status: DOWN, reason: PLANNED_MAINTENANCE }

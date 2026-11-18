@@ -1,0 +1,9 @@
+site_name: Demo Gold Mine
+timezone: America/Los_Angeles
+shift_pattern:
+  - { code: D, name: Day, start: "06:00", hours: 12 }
+  - { code: N, name: Night, start: "18:00", hours: 12 }
+crews: [A, B, C, D]
+crew_rotation_start: "2026-01-01"   # crew A on day shift on this date, 4-crew 2-on rotation
+payload_band: { min_pct: 0.90, max_pct: 1.10 }
+crusher_nameplate_tph: 2200

@@ -1,0 +1,20 @@
+name: release
+on:
+  push: { tags: ["v*"] }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: { packages: write, contents: read }
+    strategy:
+      matrix:
+        service: [simulators, connectors, stream_processor, sink, orchestration, api, kpi_engine, reporting]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ${{ matrix.service }}/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ matrix.service }}:${{ github.ref_name }}

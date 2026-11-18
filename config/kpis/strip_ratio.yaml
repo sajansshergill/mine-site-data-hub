@@ -1,0 +1,11 @@
+name: strip_ratio
+version: 2
+owner: mine-engineering
+unit: ratio
+description: Waste tonnes divided by ore tonnes for the shift
+inputs: [tonnes_by_material]
+lua: |
+  local waste = inputs.tonnes_by_material["WASTE"] or 0
+  local ore = inputs.tonnes_by_material["ORE"] or 0
+  if ore == 0 then return nil end
+  return waste / ore

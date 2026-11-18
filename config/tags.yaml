@@ -1,0 +1,17 @@
+opcua:
+  namespace_uri: urn:minehub:plant
+  tags:
+    - { canonical: CR01.THROUGHPUT_TPH, node: "ns=2;s=Crusher.Throughput", unit: t/h, critical: true, stale_after_s: 120 }
+    - { canonical: CR01.POWER_KW,       node: "ns=2;s=Crusher.Power",      unit: kW,  critical: true, stale_after_s: 120 }
+    - { canonical: CR01.RUNNING,        node: "ns=2;s=Crusher.Running",    unit: bool, critical: true, stale_after_s: 120 }
+    - { canonical: ML01.FEED_TPH,       node: "ns=2;s=Mill.Feed",          unit: t/h, critical: true, stale_after_s: 120 }
+    - { canonical: ML01.POWER_KW,       node: "ns=2;s=Mill.Power",         unit: kW,  critical: false, stale_after_s: 300 }
+    - { canonical: ML01.BEARING_TEMP_C, node: "ns=2;s=Mill.BearingTemp",   unit: degC, critical: false, stale_after_s: 300 }
+modbus:
+  unit_id: 1
+  poll_interval_s: 5
+  word_order: little      # low word first, as many PLCs do
+  registers:
+    - { canonical: CV01.BELT_SCALE_TOTAL_T, address: 0, type: uint32, scale: 0.1, unit: t, totalizer: true, rollover: 4294967295 }
+    - { canonical: CV01.BELT_RATE_TPH,      address: 2, type: float32, scale: 1.0, unit: t/h, totalizer: false }
+    - { canonical: CV01.BELT_SPEED_MS,      address: 4, type: float32, scale: 1.0, unit: m/s, totalizer: false }
