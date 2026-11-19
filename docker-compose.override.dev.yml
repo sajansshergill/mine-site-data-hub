@@ -1,0 +1,62 @@
+# Dev overrides: hot reload + exposed metrics ports.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.override.dev.yml up
+
+services:
+  api:
+    volumes:
+      - ./api/app:/app/app
+      - ./libs:/app/libs
+      - ./config:/app/config
+      - ./kpi_engine:/app/kpi_engine
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    ports:
+      - "8000:8000"
+      - "9101:9100"
+
+  mqtt-connector:
+    volumes:
+      - ./connectors:/app/connectors
+      - ./libs:/app/libs
+      - ./config:/app/config
+    ports: ["9102:9100"]
+
+  opcua-connector:
+    volumes:
+      - ./connectors:/app/connectors
+      - ./libs:/app/libs
+      - ./config:/app/config
+    ports: ["9103:9100"]
+
+  modbus-connector:
+    volumes:
+      - ./connectors:/app/connectors
+      - ./libs:/app/libs
+      - ./config:/app/config
+    ports: ["9104:9100"]
+
+  stream-processor:
+    volumes:
+      - ./stream_processor:/app/stream_processor
+      - ./libs:/app/libs
+      - ./config:/app/config
+    ports: ["9105:9100"]
+
+  sink:
+    volumes:
+      - ./sink:/app/sink
+      - ./libs:/app/libs
+    ports: ["9106:9100"]
+
+  orchestration:
+    volumes:
+      - ./orchestration:/app/orchestration
+      - ./reporting:/app/reporting
+      - ./warehouse:/app/warehouse
+      - ./config:/app/config
+      - ./data/drop:/app/data/drop
+
+  grafana:
+    ports: ["3000:3000"]
+
+  prometheus:
+    ports: ["9090:9090"]

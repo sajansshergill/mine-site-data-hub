@@ -1,0 +1,112 @@
+{
+  "uid": "haul_fleet",
+  "title": "Haul Fleet",
+  "tags": [
+    "minehub",
+    "fleet"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Cycle time by truck",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT truck_id, avg(cycle_time_s)/60.0 AS avg_cycle_min, count(*) AS cycles FROM marts.fct_truck_cycle WHERE shift_id = (SELECT max(shift_id) FROM marts.fct_truck_cycle) GROUP BY truck_id ORDER BY truck_id",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Payload compliance",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT truck_id, avg(payload_t) AS avg_payload_t, count(*) AS loads FROM marts.fct_truck_cycle WHERE shift_id = (SELECT max(shift_id) FROM marts.fct_truck_cycle) GROUP BY truck_id",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Queue length (latest)",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT location, queue_length FROM marts.fct_equipment_shift WHERE false -- placeholder live queues via API/Redis",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "editable": true
+}

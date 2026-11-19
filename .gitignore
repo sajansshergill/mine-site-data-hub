@@ -1,0 +1,16 @@
+.venv/
+.venv311/
+__pycache__/
+*.pyc
+*.egg-info/
+.eggs/
+dist/
+build/
+warehouse/dbt/target/
+warehouse/dbt/dbt_packages/
+warehouse/dbt/logs/
+warehouse/dbt/.user.yml
+.env
+.DS_Store
+reports/
+*.pdf

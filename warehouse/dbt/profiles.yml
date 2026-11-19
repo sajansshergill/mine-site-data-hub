@@ -1,0 +1,12 @@
+minehub:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'timescaledb') }}"
+      user: "{{ env_var('POSTGRES_USER', 'minehub') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'change-me') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'minehub') }}"
+      port: 5432
+      schema: public
+      threads: 4

@@ -1,0 +1,22 @@
+{
+  "type": "record",
+  "name": "TruckCycle",
+  "namespace": "minehub.fleet",
+  "fields": [
+    {"name": "cycle_id", "type": "string"},
+    {"name": "truck_id", "type": "string"},
+    {"name": "shift_id", "type": "string"},
+    {"name": "load_start", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "load_end", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "dump_start", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "dump_end", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "source_location", "type": "string"},
+    {"name": "dest_location", "type": "string"},
+    {"name": "payload_t", "type": "double"},
+    {"name": "queue_load_s", "type": "double"},
+    {"name": "queue_dump_s", "type": "double"},
+    {"name": "haul_full_s", "type": "double"},
+    {"name": "haul_empty_s", "type": "double"},
+    {"name": "revision", "type": "int", "default": 0}
+  ]
+}

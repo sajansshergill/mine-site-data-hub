@@ -1,0 +1,28 @@
+version: 2
+sources:
+  - name: raw
+    schema: raw
+    freshness: { warn_after: { count: 15, period: minute }, error_after: { count: 60, period: minute } }
+    loaded_at_field: ingested_at
+    tables:
+      - name: truck_telemetry
+      - name: plant_tags
+      - name: equipment_events
+      - name: truck_cycles
+      - { name: mine_plan, freshness: null }
+      - { name: work_orders, freshness: null }
+      - { name: assays, freshness: null }
+models:
+  - name: stg_truck_cycles
+    columns:
+      - { name: cycle_id, tests: [unique, not_null] }
+      - { name: payload_t, tests: [not_null] }
+  - name: stg_equipment_events
+    columns:
+      - { name: status, tests: [{ accepted_values: { values: [RUNNING, STANDBY, DELAY, DOWN] } }] }
+  - name: stg_plan
+    columns:
+      - { name: material, tests: [{ accepted_values: { values: [ORE, WASTE] } }] }
+  - name: stg_work_orders
+    columns:
+      - { name: wo_number, tests: [unique, not_null] }

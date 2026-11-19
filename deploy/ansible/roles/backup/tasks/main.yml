@@ -1,0 +1,29 @@
+---
+- name: Create backup directory
+  file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: "0750"
+
+- name: Install backup / restore / healthcheck scripts
+  copy:
+    src: "{{ playbook_dir }}/../scripts/{{ item }}"
+    dest: "/usr/local/bin/{{ item }}"
+    mode: "0755"
+  loop:
+    - backup.sh
+    - restore.sh
+    - healthcheck.sh
+
+- name: Nightly backup cron
+  cron:
+    name: minehub-backup
+    minute: "15"
+    hour: "2"
+    job: "/usr/local/bin/backup.sh {{ minehub_root }} {{ backup_dir }} {{ backup_retain_days | default(14) }} >> /var/log/minehub-backup.log 2>&1"
+
+- name: Healthcheck cron every 5 minutes
+  cron:
+    name: minehub-healthcheck
+    minute: "*/5"
+    job: "/usr/local/bin/healthcheck.sh {{ minehub_root }} >> /var/log/minehub-health.log 2>&1"

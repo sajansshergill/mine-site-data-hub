@@ -1,0 +1,135 @@
+x-py: &py
+  env_file: .env
+  restart: unless-stopped
+  depends_on: [redpanda, timescaledb, redis]
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    env_file: .env
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"], interval: 10s, retries: 5 }
+  redpanda:
+    image: redpandadata/redpanda:v24.1.7
+    command: [redpanda, start, --smp, "1", --memory, 1G, --overprovisioned, --node-id, "0",
+              --kafka-addr, "PLAINTEXT://0.0.0.0:9092", --advertise-kafka-addr, "PLAINTEXT://redpanda:9092",
+              --schema-registry-addr, "0.0.0.0:8081"]
+    ports: ["9092:9092", "8081:8081"]
+    volumes: [rpdata:/var/lib/redpanda/data]
+  redpanda-console:
+    image: redpandadata/console:v2.6.0
+    environment: { KAFKA_BROKERS: redpanda:9092, KAFKA_SCHEMAREGISTRY_ENABLED: "true", KAFKA_SCHEMAREGISTRY_URLS: http://redpanda:8081 }
+    ports: ["8080:8080"]
+    depends_on: [redpanda]
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports: ["1883:1883"]
+    volumes: [./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf]
+
+  # ---------- simulators ----------
+  sim-fleet:
+    <<: *py
+    build: { context: ., dockerfile: simulators/Dockerfile }
+    command: python -m simulators.fleet.main
+    depends_on: [mosquitto]
+  sim-plant-opcua:
+    <<: *py
+    build: { context: ., dockerfile: simulators/Dockerfile }
+    command: python -m simulators.plant.opcua_server
+    ports: ["4840:4840"]
+    depends_on: []
+  sim-plant-modbus:
+    <<: *py
+    build: { context: ., dockerfile: simulators/Dockerfile }
+    command: python -m simulators.plant.modbus_server
+    ports: ["5020:5020"]
+    depends_on: []
+  sim-logs:
+    <<: *py
+    build: { context: ., dockerfile: simulators/Dockerfile }
+    command: python -m simulators.logs.log_writer --out-dir /var/log/equipment
+    volumes: [eqlogs:/var/log/equipment]
+    depends_on: []
+
+  # ---------- connectors ----------
+  mqtt-connector:
+    <<: *py
+    build: { context: ., dockerfile: connectors/Dockerfile }
+    command: python -m connectors.mqtt_connector.main
+  opcua-connector:
+    <<: *py
+    build: { context: ., dockerfile: connectors/Dockerfile }
+    command: python -m connectors.opcua_connector.main
+  modbus-connector:
+    <<: *py
+    build: { context: ., dockerfile: connectors/Dockerfile }
+    command: python -m connectors.modbus_connector.main
+  fluent-bit:
+    image: fluent/fluent-bit:3.0
+    environment: { KAFKA_BOOTSTRAP: redpanda:9092, SITE_UTC_OFFSET_MIN: "-480" }
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluent-bit/parsers.conf:/fluent-bit/etc/parsers.conf
+      - ./fluent-bit/lua:/fluent-bit/etc/lua
+      - eqlogs:/var/log/equipment:ro
+      - fbstate:/fluent-bit/storage
+    ports: ["2020:2020"]
+    depends_on: [redpanda]
+
+  # ---------- processing ----------
+  stream-processor:
+    <<: *py
+    build: { context: ., dockerfile: stream_processor/Dockerfile }
+  sink:
+    <<: *py
+    build: { context: ., dockerfile: sink/Dockerfile }
+
+  # ---------- batch / serving ----------
+  orchestration:
+    <<: *py
+    build: { context: ., dockerfile: orchestration/Dockerfile }
+    ports: ["3001:3000"]
+    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output]
+  dagster-daemon:
+    <<: *py
+    build: { context: ., dockerfile: orchestration/Dockerfile }
+    command: dagster-daemon run -w /app/orchestration/workspace.yaml
+    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output]
+  api:
+    <<: *py
+    build: { context: ., dockerfile: api/Dockerfile }
+    ports: ["8000:8000"]
+
+  # ---------- observability ----------
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    volumes: [./observability/prometheus:/etc/prometheus]
+    command: [--config.file=/etc/prometheus/prometheus.yml, --storage.tsdb.retention.time=30d]
+    ports: ["9090:9090"]
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    volumes: [./observability/alertmanager:/etc/alertmanager]
+    ports: ["9093:9093"]
+  loki:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes: [./observability/loki:/etc/loki]
+    ports: ["3100:3100"]
+  promtail:
+    image: grafana/promtail:3.0.0
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes: [./observability/promtail:/etc/promtail, /var/run/docker.sock:/var/run/docker.sock:ro]
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.15.0
+    environment: { DATA_SOURCE_NAME: "postgresql://minehub:change-me@timescaledb:5432/minehub?sslmode=disable" }
+  grafana:
+    image: grafana/grafana:11.0.0
+    env_file: .env
+    volumes: [./grafana/provisioning:/etc/grafana/provisioning, ./grafana/dashboards:/var/lib/grafana/dashboards]
+    ports: ["3000:3000"]
+
+volumes: { pgdata: {}, rpdata: {}, eqlogs: {}, fbstate: {}, reports: {} }

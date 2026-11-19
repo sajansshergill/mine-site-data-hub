@@ -1,0 +1,12 @@
+{
+  "type": "record",
+  "name": "PlantTag",
+  "namespace": "minehub.plant",
+  "fields": [
+    {"name": "ts", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "tag", "type": "string"},
+    {"name": "source", "type": "string"},
+    {"name": "value", "type": "double"},
+    {"name": "quality", "type": {"type": "enum", "name": "Quality", "symbols": ["GOOD", "UNCERTAIN", "BAD"]}}
+  ]
+}

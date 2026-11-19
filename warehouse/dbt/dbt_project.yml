@@ -1,0 +1,15 @@
+name: minehub
+version: "0.1.0"
+config-version: 2
+profile: minehub
+model-paths: [models]
+seed-paths: [seeds]
+macro-paths: [macros]
+test-paths: [tests]
+models:
+  minehub:
+    staging: { +schema: staging, +materialized: view }
+    intermediate: { +schema: intermediate, +materialized: table }
+    marts: { +schema: marts, +materialized: table }
+seeds:
+  minehub: { +schema: seeds }

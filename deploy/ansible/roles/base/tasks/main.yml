@@ -1,0 +1,40 @@
+---
+- name: Install base packages
+  apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+      - chrony
+      - ufw
+      - curl
+      - jq
+    state: present
+    update_cache: true
+
+- name: Enable and start Docker
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Ensure chrony is running (shift boundaries need correct clocks)
+  service:
+    name: chrony
+    state: started
+    enabled: true
+
+- name: Set system timezone
+  timezone:
+    name: "{{ site_tz | default('America/Los_Angeles') }}"
+
+- name: Allow SSH and API/Grafana ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: ["22", "8000", "3000", "3001"]
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny

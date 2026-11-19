@@ -1,0 +1,112 @@
+{
+  "uid": "shift_overview",
+  "title": "Shift Overview",
+  "tags": [
+    "minehub",
+    "shift"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-12h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Plan vs actual by location",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT location, sum(planned_tonnes) AS planned, sum(actual_tonnes) AS actual FROM marts.fct_plan_vs_actual WHERE shift_id = (SELECT max(shift_id) FROM marts.fct_plan_vs_actual) GROUP BY location ORDER BY location",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Compliance %",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT shift_id, 100.0 * sum(actual_tonnes) / nullif(sum(planned_tonnes),0) AS compliance_pct FROM marts.fct_plan_vs_actual GROUP BY shift_id ORDER BY shift_id DESC LIMIT 14",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    },
+    {
+      "id": 3,
+      "type": "table",
+      "title": "Tonnes by material",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "datasource": {
+        "type": "postgres",
+        "uid": "timescaledb"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT material, sum(actual_tonnes) AS tonnes FROM marts.fct_plan_vs_actual WHERE shift_id = (SELECT max(shift_id) FROM marts.fct_plan_vs_actual) GROUP BY material",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "options": {}
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "editable": true
+}

@@ -1,0 +1,11 @@
+---
+- name: Deploy Mine Site Data Hub
+  hosts: minehub
+  become: true
+  vars:
+    minehub_root: /opt/minehub
+    backup_dir: /var/backups/minehub
+  roles:
+    - base
+    - minehub
+    - backup

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ site_name }} — Shift Report {{ shift_id }}</title>
+  <style>{{ styles }}</style>
+</head>
+<body>
+  <header>
+    <div class="site">{{ site_name }}</div>
+    <h1>Shift Report</h1>
+    <div class="meta">Shift {{ shift_id }} · Generated {{ generated_at }}</div>
+  </header>
+
+  <section class="kpis">
+    <div class="kpi">
+      <div class="label">Planned tonnes</div>
+      <div class="value">{{ "%.0f"|format(total_planned) }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Actual tonnes</div>
+      <div class="value">{{ "%.0f"|format(total_actual) }}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Compliance</div>
+      <div class="value">{% if compliance_pct is not none %}{{ "%.1f"|format(compliance_pct) }}%{% else %}—{% endif %}</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Loads</div>
+      <div class="value">{{ total_loads }}</div>
+    </div>
+  </section>
+
+  <h2>Plan vs actual</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Location</th>
+        <th>Material</th>
+        <th class="num">Planned (t)</th>
+        <th class="num">Actual (t)</th>
+        <th class="num">Variance (t)</th>
+        <th class="num">Var %</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.location }}</td>
+        <td>{{ r.material }}</td>
+        <td class="num">{{ "%.0f"|format(r.planned_tonnes) }}</td>
+        <td class="num">{{ "%.0f"|format(r.actual_tonnes) }}</td>
+        <td class="num">{{ "%.0f"|format(r.variance_t) }}</td>
+        <td class="num">{% if r.variance_pct is not none %}{{ "%.1f"|format(r.variance_pct) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">No plan-vs-actual rows for this shift.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if chart_pva %}
+  <div class="charts"><img src="data:image/png;base64,{{ chart_pva }}" alt="Plan vs actual chart" /></div>
+  {% endif %}
+
+  <h2>Fleet KPIs</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Equipment</th>
+        <th class="num">Availability %</th>
+        <th class="num">Utilization %</th>
+        <th class="num">Operating h</th>
+        <th class="num">Downtime h</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in fleet %}
+      <tr>
+        <td>{{ e.equipment_id }}</td>
+        <td class="num">{% if e.availability_pct is not none %}{{ "%.1f"|format(e.availability_pct) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if e.utilization_pct is not none %}{{ "%.1f"|format(e.utilization_pct) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if e.operating_hours is not none %}{{ "%.1f"|format(e.operating_hours) }}{% else %}—{% endif %}</td>
+        <td class="num">{% if e.downtime_hours is not none %}{{ "%.1f"|format(e.downtime_hours) }}{% else %}—{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No fleet KPI rows.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if chart_fleet %}
+  <div class="charts"><img src="data:image/png;base64,{{ chart_fleet }}" alt="Fleet loads chart" /></div>
+  {% endif %}
+
+  <h2>Delays</h2>
+  <table>
+    <thead>
+      <tr><th>Reason</th><th class="num">Hours</th></tr>
+    </thead>
+    <tbody>
+      {% for d in delays %}
+      <tr><td>{{ d.reason }}</td><td class="num">{{ "%.1f"|format(d.hours) }}</td></tr>
+      {% else %}
+      <tr><td colspan="2">No delay records.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if chart_delays %}
+  <div class="charts"><img src="data:image/png;base64,{{ chart_delays }}" alt="Delay pie chart" /></div>
+  {% endif %}
+
+  <h2>Data quality</h2>
+  <table>
+    <thead>
+      <tr><th>Check</th><th>Severity</th><th>Result</th><th class="num">Failing rows</th></tr>
+    </thead>
+    <tbody>
+      {% for q in dq %}
+      <tr>
+        <td>{{ q.check_name }}</td>
+        <td>{{ q.severity }}</td>
+        <td class="{% if q.passed %}dq-pass{% else %}dq-fail{% endif %}">{% if q.passed %}PASS{% else %}FAIL{% endif %}</td>
+        <td class="num">{{ q.failing_rows }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">No DQ results for this shift.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Commentary</h2>
+  <ul class="notes">
+    {% for note in commentary %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+
+  <footer>
+    Mine Site Data Hub · Automated shift report · Numbers are simulated demo data.
+  </footer>
+</body>
+</html>

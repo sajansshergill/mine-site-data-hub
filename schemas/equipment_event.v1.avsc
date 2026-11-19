@@ -1,0 +1,14 @@
+{
+  "type": "record",
+  "name": "EquipmentEvent",
+  "namespace": "minehub.equipment",
+  "fields": [
+    {"name": "ts", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "equipment_id", "type": "string"},
+    {"name": "status", "type": {"type": "enum", "name": "Status", "symbols": ["RUNNING", "STANDBY", "DELAY", "DOWN"]}},
+    {"name": "reason", "type": ["null", "string"], "default": null},
+    {"name": "fault_code", "type": ["null", "string"], "default": null},
+    {"name": "vendor", "type": "string"},
+    {"name": "raw_code", "type": "string"}
+  ]
+}

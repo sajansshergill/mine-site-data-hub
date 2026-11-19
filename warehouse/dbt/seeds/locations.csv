@@ -1,0 +1,6 @@
+location,location_type,pit,material
+PIT1_B1,bench,PIT1,ORE
+PIT1_B2,bench,PIT1,WASTE
+PIT2_B1,bench,PIT2,ORE
+CRUSHER,crusher,,ORE
+WASTE_DUMP_N,dump,,WASTE

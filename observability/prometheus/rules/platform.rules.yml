@@ -1,0 +1,52 @@
+groups:
+  - name: platform
+    rules:
+      - alert: ConnectorDown
+        expr: up{job="connectors"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Connector {{ $labels.instance }} is down"
+          description: "No metrics scraped from {{ $labels.instance }} for 2 minutes."
+          runbook: "docs/runbook.md#connectordown"
+
+      - alert: IngestStalled
+        expr: (time() - minehub_last_message_unixtime) > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ingest stalled for {{ $labels.service }}/{{ $labels.source }}"
+          description: "No messages from {{ $labels.source }} for over 5 minutes."
+          runbook: "docs/runbook.md#ingeststalled"
+
+      - alert: ConsumerLagHigh
+        expr: minehub_consumer_lag > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Consumer lag high on {{ $labels.topic }}"
+          description: "Stream processor lag is {{ $value }} messages (threshold 10,000)."
+          runbook: "docs/runbook.md#consumerlaghigh"
+
+      - alert: DiskFilling
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.20
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host disk filling"
+          description: "Less than 20% free on root filesystem."
+          runbook: "docs/runbook.md#diskfilling"
+
+      - alert: BackupMissed
+        expr: (time() - minehub_last_backup_unixtime) > 93600
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backup missed"
+          description: "No successful backup in the last 26 hours."
+          runbook: "docs/runbook.md#backupmissed"

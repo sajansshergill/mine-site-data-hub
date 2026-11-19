@@ -1,0 +1,57 @@
+version: 2
+models:
+  - name: dim_shift
+    columns:
+      - { name: shift_id, tests: [unique, not_null] }
+      - { name: start_ts, tests: [not_null] }
+      - { name: end_ts, tests: [not_null] }
+      - { name: day_night, tests: [not_null, { accepted_values: { values: [day, night] } }] }
+      - { name: crew, tests: [not_null] }
+  - name: dim_equipment
+    columns:
+      - { name: equipment_id, tests: [unique, not_null] }
+      - { name: equipment_class, tests: [not_null] }
+  - name: dim_location
+    columns:
+      - { name: location, tests: [unique, not_null] }
+      - { name: material, tests: [{ accepted_values: { values: [ORE, WASTE] } }] }
+  - name: dim_material
+    columns:
+      - { name: material, tests: [unique, not_null] }
+  - name: fct_truck_cycle
+    columns:
+      - { name: cycle_id, tests: [unique, not_null] }
+      - { name: shift_id, tests: [not_null, { relationships: { to: ref('dim_shift'), field: shift_id } }] }
+      - { name: payload_t, tests: [not_null] }
+      - { name: material, tests: [not_null, { accepted_values: { values: [ORE, WASTE] } }] }
+      - name: source_location
+        tests:
+          - relationships: { to: ref('dim_location'), field: location }
+  - name: fct_equipment_shift
+    columns:
+      - { name: equipment_id, tests: [not_null, { relationships: { to: ref('dim_equipment'), field: equipment_id } }] }
+      - { name: shift_id, tests: [not_null, { relationships: { to: ref('dim_shift'), field: shift_id } }] }
+      - { name: operating_hours, tests: [not_null] }
+      - { name: standby_hours, tests: [not_null] }
+      - { name: calendar_hours, tests: [not_null] }
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [equipment_id, shift_id]
+  - name: fct_plan_vs_actual
+    columns:
+      - { name: shift_id, tests: [not_null, { relationships: { to: ref('dim_shift'), field: shift_id } }] }
+      - { name: location, tests: [not_null] }
+      - { name: material, tests: [not_null, { accepted_values: { values: [ORE, WASTE] } }] }
+      - { name: planned_tonnes, tests: [not_null] }
+      - { name: actual_tonnes, tests: [not_null] }
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [shift_id, location, material]
+  - name: fct_maintenance
+    columns:
+      - { name: wo_number, tests: [unique, not_null] }
+      - { name: equipment_id, tests: [not_null, { relationships: { to: ref('dim_equipment'), field: equipment_id } }] }
+      - { name: planned_unplanned, tests: [{ accepted_values: { values: [planned, unplanned] } }] }
+  - name: fct_grade_reconciliation
+    columns:
+      - { name: shift_id, tests: [unique, not_null, { relationships: { to: ref('dim_shift'), field: shift_id } }] }

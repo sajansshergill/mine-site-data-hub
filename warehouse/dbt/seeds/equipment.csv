@@ -1,0 +1,19 @@
+equipment_id,equipment_class,fleet,model,nominal_payload_t
+HT01,truck,haul,CAT 793F,227
+HT02,truck,haul,CAT 793F,227
+HT03,truck,haul,CAT 793F,227
+HT04,truck,haul,CAT 793F,227
+HT05,truck,haul,CAT 793F,227
+HT06,truck,haul,CAT 793F,227
+HT07,truck,haul,CAT 793F,227
+HT08,truck,haul,CAT 793F,227
+HT09,truck,haul,CAT 793F,227
+HT10,truck,haul,CAT 793F,227
+HT11,truck,haul,CAT 793F,227
+HT12,truck,haul,CAT 793F,227
+SH01,shovel,load,Hitachi EX5600,
+SH02,shovel,load,Hitachi EX5600,
+SH03,shovel,load,CAT 6060,
+CR01,crusher,plant,Primary gyratory,
+ML01,mill,plant,SAG mill,
+CV01,conveyor,plant,Overland conveyor,

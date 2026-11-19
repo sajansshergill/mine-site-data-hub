@@ -1,0 +1,1 @@
+{% macro safe_divide(n, d) -%} ({{ n }})::numeric / nullif(({{ d }})::numeric, 0) {%- endmacro %}

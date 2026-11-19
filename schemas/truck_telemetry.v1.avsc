@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "name": "TruckTelemetry",
+  "namespace": "minehub.fleet",
+  "fields": [
+    {"name": "ts", "type": "long", "logicalType": "timestamp-millis"},
+    {"name": "msg_id", "type": "string"},
+    {"name": "truck_id", "type": "string"},
+    {"name": "x_m", "type": "double"},
+    {"name": "y_m", "type": "double"},
+    {"name": "speed_kmh", "type": "double"},
+    {"name": "payload_t", "type": "double"},
+    {"name": "engine_on", "type": "boolean"},
+    {"name": "fuel_pct", "type": ["null", "double"], "default": null}
+  ]
+}

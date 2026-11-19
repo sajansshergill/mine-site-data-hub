@@ -1,0 +1,95 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mine-site-data-hub"
+version = "0.1.0"
+description = "On-prem plan vs. actual data hub for an open-pit gold mine"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Sajan Shergill" }]
+dependencies = [
+  "minehub-common",
+  "fastapi>=0.111",
+  "uvicorn[standard]>=0.29",
+  "pydantic>=2.7",
+  "pydantic-settings>=2.2",
+  "sqlalchemy>=2.0,<2.1",
+  "psycopg[binary]>=3.1",
+  "redis>=5.0",
+  "confluent-kafka>=2.3",
+  "fastavro>=1.9",
+  "httpx>=0.27",
+  "pyyaml>=6.0",
+  "prometheus-client>=0.20",
+  "pandas>=2.2",
+  "openpyxl>=3.1",
+  "paho-mqtt>=2.0",
+  "asyncua>=1.1",
+  "pymodbus>=3.6,<3.8",
+  "networkx>=3.3",
+  "lupa>=2.0",
+  "dagster==1.12.8",
+  "dagster-webserver==1.12.8",
+  "dagster-postgres==0.28.8",
+  "dagster-dbt==0.28.8",
+  "dbt-core>=1.8,<1.10",
+  "dbt-postgres>=1.8,<1.10",
+  "alembic>=1.13",
+  "jinja2>=3.1",
+  "matplotlib>=3.8",
+  "python-dateutil>=2.9",
+  "tenacity>=8.3",
+]
+
+[project.optional-dependencies]
+pdf = ["weasyprint>=62"]
+dev = [
+  "pytest>=8.2",
+  "pytest-asyncio>=0.23",
+  "hypothesis>=6.100",
+  "testcontainers>=4.4",
+  "ruff>=0.4",
+  "mypy>=1.10",
+  "types-PyYAML",
+  "types-redis",
+  "types-python-dateutil",
+  "sqlfluff>=3.0",
+  "locust>=2.28",
+  "httpx>=0.27",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "connectors*", "simulators*", "stream_processor*", "sink*", "orchestration*", "kpi_engine*", "reporting*", "schemas*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+exclude = [".git", ".venv", "warehouse/dbt/target", "warehouse/dbt/dbt_packages"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_configs = true
+exclude = ["warehouse/dbt/", "tests/load/"]
+
+[tool.pytest.ini_options]
+markers = [
+  "integration: end-to-end tests that need docker/testcontainers",
+]
+asyncio_mode = "auto"
+filterwarnings = ["ignore::DeprecationWarning"]
+testpaths = ["tests", "kpi_engine/tests", "stream_processor/tests", "connectors/tests"]
+
+[tool.sqlfluff.core]
+dialect = "postgres"
+templater = "jinja"
+exclude_rules = ["L031", "L034"]

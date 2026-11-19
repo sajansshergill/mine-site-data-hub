@@ -1,0 +1,8 @@
+reason,category,counts_as_available
+NO_OPERATOR,standby,true
+SHIFT_CHANGE,standby,true
+QUEUE,operational_delay,true
+REFUEL,operational_delay,true
+OPERATIONAL,operational_delay,true
+UNPLANNED_BREAKDOWN,unplanned_down,false
+PLANNED_MAINTENANCE,planned_down,false
