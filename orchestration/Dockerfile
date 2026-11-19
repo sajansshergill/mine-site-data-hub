@@ -19,11 +19,18 @@ COPY warehouse /app/warehouse
 COPY reporting /app/reporting
 COPY config /app/config
 COPY libs /app/libs
+COPY schemas /app/schemas
+COPY simulators /app/simulators
 COPY pyproject.toml README.md /app/
-RUN pip install --no-cache-dir --no-deps /app
+RUN pip install --no-cache-dir --no-deps /app alembic confluent-kafka fastavro httpx
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
+ENV DAGSTER_HOME=/opt/dagster/dagster_home
+ENV CONFIG_DIR=/app/config
+ENV SCHEMA_DIR=/app/schemas
+RUN mkdir -p /opt/dagster/dagster_home \
+    && cp /app/orchestration/dagster.yaml /opt/dagster/dagster_home/dagster.yaml
 WORKDIR /app
 
 CMD ["dagster-webserver", "-w", "/app/orchestration/workspace.yaml", "-h", "0.0.0.0", "-p", "3000"]

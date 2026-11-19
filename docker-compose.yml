@@ -92,13 +92,15 @@ services:
   orchestration:
     <<: *py
     build: { context: ., dockerfile: orchestration/Dockerfile }
+    environment: { DAGSTER_HOME: /opt/dagster/dagster_home }
     ports: ["3001:3000"]
-    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output]
+    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output, dagster_home:/opt/dagster/dagster_home]
   dagster-daemon:
     <<: *py
     build: { context: ., dockerfile: orchestration/Dockerfile }
+    environment: { DAGSTER_HOME: /opt/dagster/dagster_home }
     command: dagster-daemon run -w /app/orchestration/workspace.yaml
-    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output]
+    volumes: [./data/drop:/app/data/drop, reports:/app/reporting/output, dagster_home:/opt/dagster/dagster_home]
   api:
     <<: *py
     build: { context: ., dockerfile: api/Dockerfile }
@@ -132,4 +134,4 @@ services:
     volumes: [./grafana/provisioning:/etc/grafana/provisioning, ./grafana/dashboards:/var/lib/grafana/dashboards]
     ports: ["3000:3000"]
 
-volumes: { pgdata: {}, rpdata: {}, eqlogs: {}, fbstate: {}, reports: {} }
+volumes: { pgdata: {}, rpdata: {}, eqlogs: {}, fbstate: {}, reports: {}, dagster_home: {} }

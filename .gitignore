@@ -14,3 +14,5 @@ warehouse/dbt/.user.yml
 .DS_Store
 reports/
 *.pdf
+deploy/ansible/inventory.ini
+data/backups/

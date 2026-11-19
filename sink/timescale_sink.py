@@ -26,9 +26,18 @@ log = logging.getLogger(SERVICE)
 
 
 def _ts(value: Any) -> datetime:
-    """Convert Avro/JSON ms-epoch (or datetime) to aware timestamptz."""
+    """Convert Avro/JSON ms-epoch, ISO strings, or datetime to aware timestamptz."""
     if isinstance(value, datetime):
         return value if value.tzinfo else value.replace(tzinfo=UTC)
+    if isinstance(value, str):
+        text = value.strip().replace("Z", "+00:00")
+        try:
+            dt = datetime.fromisoformat(text)
+        except ValueError:
+            from dateutil import parser as date_parser
+
+            dt = date_parser.parse(value)
+        return dt if dt.tzinfo else dt.replace(tzinfo=UTC)
     if not isinstance(value, (int, float)):
         raise TypeError(f"unsupported timestamp: {value!r}")
     v = float(value)
@@ -162,13 +171,18 @@ class TimescaleSink:
 
     def _seek_from_offsets(self) -> None:
         """On startup, seek each partition to ops.ingest_offsets.next_offset when present."""
-        with self._conn.cursor() as cur:
-            cur.execute(
-                "SELECT topic, partition, next_offset FROM ops.ingest_offsets WHERE consumer_group = %s",
-                (GROUP_ID,),
-            )
-            rows = cur.fetchall()
-        self._conn.commit()
+        try:
+            with self._conn.cursor() as cur:
+                cur.execute(
+                    "SELECT topic, partition, next_offset FROM ops.ingest_offsets WHERE consumer_group = %s",
+                    (GROUP_ID,),
+                )
+                rows = cur.fetchall()
+            self._conn.commit()
+        except Exception as exc:  # noqa: BLE001 — migrations may not have run yet
+            self._conn.rollback()
+            log.warning("ingest_offsets unavailable; starting from earliest", extra={"extra": {"error": str(exc)}})
+            return
         if not rows:
             return
         # Assignments are not ready until the first poll; seek after subscribe via on_assign callback.
@@ -245,6 +259,14 @@ class TimescaleSink:
         self._offsets.observe(topic, msg.partition(), msg.offset())
         self._pending_msgs.append(msg)
 
+    @staticmethod
+    def _dedupe(rows: list[tuple], key_idxs: tuple[int, ...]) -> list[tuple]:
+        """Keep last row per conflict key so ON CONFLICT DO UPDATE is valid."""
+        out: dict[tuple, tuple] = {}
+        for row in rows:
+            out[tuple(row[i] for i in key_idxs)] = row
+        return list(out.values())
+
     def flush(self) -> None:
         if not self._pending_msgs:
             return
@@ -259,7 +281,7 @@ class TimescaleSink:
                         "raw.truck_telemetry",
                         TELEMETRY_COLS,
                         ("ts", "msg_id"),
-                        self._telemetry,
+                        self._dedupe(self._telemetry, (0, 1)),
                     )
                 if self._plant:
                     upsert_via_staging(
@@ -267,7 +289,7 @@ class TimescaleSink:
                         "raw.plant_tags",
                         PLANT_COLS,
                         ("ts", "tag", "source"),
-                        self._plant,
+                        self._dedupe(self._plant, (0, 1, 2)),
                     )
                 if self._equipment:
                     upsert_via_staging(
@@ -275,7 +297,7 @@ class TimescaleSink:
                         "raw.equipment_events",
                         EQUIP_COLS,
                         ("ts", "equipment_id", "raw_code"),
-                        self._equipment,
+                        self._dedupe(self._equipment, (0, 1, 6)),
                     )
                 if self._cycles:
                     # Upsert on cycle_id; only apply when incoming revision >= existing.

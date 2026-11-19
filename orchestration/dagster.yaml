@@ -1,0 +1,3 @@
+# Minimal instance config. Leave empty of optional sections so Dagster defaults apply.
+telemetry:
+  enabled: false

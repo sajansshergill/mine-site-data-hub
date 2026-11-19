@@ -5,7 +5,7 @@ COPY libs/minehub_common /libs/minehub_common
 RUN pip install --no-cache-dir /libs/minehub_common \
     networkx \
     asyncua \
-    pymodbus \
+    "pymodbus>=3.6,<3.8" \
     paho-mqtt \
     openpyxl \
     pyyaml
