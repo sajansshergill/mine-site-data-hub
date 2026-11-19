@@ -2,7 +2,7 @@ COMPOSE = docker compose
 s ?= api
 shift ?= latest
 
-.PHONY: up down logs seed test test-integration test-all lint dbt-run dbt-test report chaos deploy fmt
+.PHONY: up down logs seed test test-integration test-all lint dbt-run dbt-test report chaos deploy deploy-site streamlit fmt
 
 up:
 	$(COMPOSE) up -d --build
@@ -53,4 +53,15 @@ fmt:
 	ruff format .
 
 deploy:
+	@if [ "$$(uname -s)" = "Darwin" ]; then \
+		ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site-local.yml; \
+	else \
+		ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml; \
+	fi
+
+deploy-site:
 	ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
+
+streamlit:
+	$(COMPOSE) up -d --build streamlit
+	@echo "Streamlit: http://localhost:8501"

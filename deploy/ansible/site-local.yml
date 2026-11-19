@@ -1,0 +1,87 @@
+---
+# Local/Mac deploy: compose up + healthcheck (skips Linux apt/ufw/systemd).
+- name: Deploy Mine Site Data Hub (local)
+  hosts: minehub
+  gather_facts: true
+  vars:
+    app_root: "{{ minehub_root }}"
+    local_path: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  tasks:
+    - name: Ensure .env exists
+      copy:
+        src: "{{ app_root }}/.env.example"
+        dest: "{{ app_root }}/.env"
+        force: false
+        mode: "0600"
+
+    - name: Ensure drop and backup dirs exist
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ app_root }}/data/drop"
+        - "{{ backup_dir }}"
+
+    - name: Build and start compose stack
+      command: docker compose up -d --build
+      args:
+        chdir: "{{ app_root }}"
+      environment:
+        PATH: "{{ local_path }}"
+      register: compose_up
+      changed_when: "'Started' in compose_up.stdout or 'Recreated' in compose_up.stdout or 'Built' in compose_up.stdout"
+
+    - name: Wait for API health
+      uri:
+        url: http://localhost:8000/health
+        method: GET
+        status_code: [200, 503]
+      register: api_health
+      retries: 30
+      delay: 2
+      until: api_health.status == 200 and (api_health.json.status | default('')) == 'ok'
+
+    - name: Run seed (schemas, migrations, samples)
+      shell: |
+        set -e
+        docker compose exec -T timescaledb pg_isready -U minehub
+        docker compose run --rm --no-deps \
+          -e SCHEMA_DIR=/app/schemas -e CONFIG_DIR=/app/config \
+          -e KAFKA_BOOTSTRAP=redpanda:9092 \
+          -e SCHEMA_REGISTRY_URL=http://redpanda:8081 \
+          -e DATABASE_URL=postgresql+psycopg://minehub:change-me@timescaledb:5432/minehub \
+          -e PSYCOPG_DSN=postgresql://minehub:change-me@timescaledb:5432/minehub \
+          -e DROP_DIR=/app/data/drop \
+          orchestration sh -c '
+            python /app/schemas/register_schemas.py
+            alembic -c /app/warehouse/alembic.ini upgrade head
+            dbt seed --project-dir /app/warehouse/dbt --profiles-dir /app/warehouse/dbt
+            python -m simulators.batch.generate_plan --out /app/data/drop/mine_plan.xlsx
+            python -m simulators.batch.generate_work_orders --out /app/data/drop/work_orders.csv
+            python -m simulators.batch.generate_assays --out /app/data/drop/assays.csv
+          '
+      args:
+        chdir: "{{ app_root }}"
+      environment:
+        PATH: "{{ local_path }}"
+      register: seed
+      changed_when: true
+
+    - name: Ensure backup/health scripts are executable
+      file:
+        path: "{{ app_root }}/deploy/scripts/{{ item }}"
+        mode: "0755"
+      loop:
+        - backup.sh
+        - restore.sh
+        - healthcheck.sh
+
+    - name: Show deploy summary
+      debug:
+        msg:
+          - "API:      http://localhost:8000/docs  (X-API-Key: viewer-key)"
+          - "Grafana:  http://localhost:3000"
+          - "Dagster:  http://localhost:3001"
+          - "Redpanda: http://localhost:8080"
+          - "API health: {{ api_health.json }}"
